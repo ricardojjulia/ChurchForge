@@ -12,4 +12,9 @@
   - `churchcore-feature-factory` for non-trivial feature planning and orchestration.
   - `churchcore-build-with-tests` for implementation work.
   - `churchcore-pr-review` for review before merge or PR handoff.
-- Treat `.claude/` as Claude Code-specific factory configuration and `.codex/` as Codex-compatible factory configuration. Keep both aligned when changing the workflow.
+- For Gemini (Antigravity) sessions, use repo-local skills in `.gemini/skills/` as the Gemini-compatible software-factory workflow:
+  - `gemini-feature-factory` for non-trivial feature planning and orchestration.
+  - `gemini-build-with-tests` for implementation work.
+  - `gemini-pr-review` for review before merge or PR handoff.
+- Treat `.claude/` as Claude Code-specific factory configuration, `.codex/` as Codex-compatible factory configuration, and `.gemini/` as Gemini-specific factory configuration. Keep all surfaces aligned when changing the workflow.
+
