@@ -8,6 +8,7 @@ SET search_path = public
 AS $$
 DECLARE
   v_role text;
+  v_profile_id uuid;
 BEGIN
   -- 1. Check if platform admin
   IF public.is_platform_admin() THEN
@@ -15,7 +16,7 @@ BEGIN
   END IF;
 
   -- 2. Fetch role from profiles
-  SELECT role INTO v_role
+  SELECT id, role INTO v_profile_id, v_role
   FROM public.profiles
   WHERE user_id = auth.uid()
   LIMIT 1;
@@ -29,7 +30,7 @@ BEGIN
     IF EXISTS (
       SELECT 1 
       FROM public.ccm_volunteer_assignments 
-      WHERE profile_id = auth.uid() 
+      WHERE profile_id = v_profile_id 
         AND role = 'lead_teacher'
     ) THEN
       RETURN 'teacher';

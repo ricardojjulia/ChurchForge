@@ -11,7 +11,7 @@ export default defineConfig({
       "app/**/*.test.{ts,tsx}",
       "components/**/*.test.{ts,tsx}",
       "lib/**/*.test.{ts,tsx}",
-      "tests/locgov/**/*.test.ts",
+      "tests/**/*.test.{ts,tsx}",
     ],
     coverage: {
       provider: "v8",

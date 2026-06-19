@@ -18,6 +18,7 @@ import {
   Modal,
   Grid,
   Loader,
+  Skeleton,
   ActionIcon,
   Card,
   SimpleGrid,
@@ -444,12 +445,70 @@ export default function ProjectHQPage() {
 
   if (sessionLoading) {
     return (
-      <Center style={{ minHeight: "100vh" }}>
-        <Stack align="center" gap="sm">
-          <Loader color="teal" size="lg" />
-          <Text size="sm" c="dimmed">Initializing Project HQ...</Text>
-        </Stack>
-      </Center>
+      <Grid gap="xl" p="md" style={{ height: "100vh", overflow: "hidden" }}>
+        {/* Mock Sidebar Nav */}
+        <Grid.Col span={3} style={{ borderRight: "1px solid var(--mantine-color-gray-3)" }}>
+          <Stack gap="md" p="md">
+            <Skeleton height={30} width="60%" radius="sm" />
+            <Skeleton height={20} width="80%" radius="sm" />
+            <Skeleton height={40} radius="md" mt="md" />
+            <Skeleton height={40} radius="md" />
+            <Skeleton height={40} radius="md" />
+            <Skeleton height={40} radius="md" />
+          </Stack>
+        </Grid.Col>
+
+        {/* Mock Content Area */}
+        <Grid.Col span={9}>
+          <Stack gap="xl" p="md">
+            {/* Header info */}
+            <Stack gap="xs">
+              <Skeleton height={35} width="30%" radius="md" />
+              <Skeleton height={15} width="50%" radius="sm" />
+            </Stack>
+
+            {/* Mock Dashboard Cards Header */}
+            <SimpleGrid cols={{ base: 1, sm: 3 }} spacing="md">
+              <Card withBorder radius="lg" p="md">
+                <Stack gap="xs">
+                  <Skeleton height={15} width="40%" />
+                  <Skeleton height={35} width="20%" />
+                  <Skeleton height={10} width="60%" />
+                </Stack>
+              </Card>
+              <Card withBorder radius="lg" p="md">
+                <Stack gap="xs">
+                  <Skeleton height={15} width="40%" />
+                  <Skeleton height={35} width="20%" />
+                  <Skeleton height={10} width="60%" />
+                </Stack>
+              </Card>
+              <Card withBorder radius="lg" p="md">
+                <Stack gap="xs">
+                  <Skeleton height={15} width="40%" />
+                  <Skeleton height={35} width="20%" />
+                  <Skeleton height={10} width="60%" />
+                </Stack>
+              </Card>
+            </SimpleGrid>
+
+            {/* Mock Main Tabbed Section / Table */}
+            <Paper withBorder radius="xl" p="xl">
+              <Stack gap="md">
+                <Group justify="space-between">
+                  <Skeleton height={30} width="20%" />
+                  <Skeleton height={30} width="15%" />
+                </Group>
+                <Skeleton height={40} radius="sm" />
+                <Skeleton height={35} radius="sm" />
+                <Skeleton height={35} radius="sm" />
+                <Skeleton height={35} radius="sm" />
+                <Skeleton height={35} radius="sm" />
+              </Stack>
+            </Paper>
+          </Stack>
+        </Grid.Col>
+      </Grid>
     );
   }
 
