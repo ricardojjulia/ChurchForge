@@ -2,7 +2,7 @@
 
 import { createTenantAdminClient } from "@/lib/supabase/tenant";
 
-export type AuditOperation = "INSERT" | "UPDATE" | "DELETE" | "ERASE";
+export type AuditOperation = "INSERT" | "UPDATE" | "DELETE" | "ERASE" | "READ_PASTORAL";
 
 export interface LogAuditEventInput {
   tableName: string;

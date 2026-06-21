@@ -57,6 +57,7 @@ import {
   updateChurchAdminPersonAction,
   updateChurchAdminPeopleBulkAction,
   updateMinistryAction,
+  updateMemberProfileAction,
 } from "@/app/app/actions";
 
 describe("app actions", () => {
@@ -163,6 +164,7 @@ describe("app actions", () => {
       emergencyContactPhone: "555-0199",
       directoryVisible: true,
       contactAllowed: true,
+      emergencyContactConsentVerified: true,
     });
 
     expect(queryTenantLocalDbMock).toHaveBeenNthCalledWith(
@@ -276,6 +278,7 @@ describe("app actions", () => {
               emergencyContactPhone: "555-0101",
               directoryVisible: true,
               contactAllowed: true,
+              emergencyContactConsentVerified: true,
             },
             status: "pending",
           },
@@ -370,5 +373,44 @@ describe("app actions", () => {
       ["rejected", "admin-profile-1", "Needs guardian details.", "request-2", "church-1"],
     );
     expect(queryTenantLocalDbMock).toHaveBeenCalledTimes(3);
+  });
+
+  describe("emergency contact consent validation", () => {
+    it("should throw an error in updateChurchAdminPersonAction if emergency contact is filled but consent is not verified", async () => {
+      await expect(
+        updateChurchAdminPersonAction({
+          profileId: "profile-2",
+          fullName: "Miriam Lane",
+          phone: "555-0102",
+          address: "22 Harbor Way",
+          displayTitle: "Pastor of Care",
+          role: "pastor",
+          membershipStatus: "active",
+          preferredContactMethod: "email",
+          emergencyContactName: "Jon Lane",
+          emergencyContactPhone: "555-0199",
+          directoryVisible: true,
+          contactAllowed: true,
+          // emergencyContactConsentVerified is omitted/false
+        })
+      ).rejects.toThrow("Consent verification is required to save emergency contact details.");
+    });
+
+    it("should throw an error in updateMemberProfileAction if emergency contact is filled but consent is not verified", async () => {
+      await expect(
+        updateMemberProfileAction({
+          fullName: "Ada Lovelace",
+          phone: "555-0100",
+          address: "123 Main",
+          preferredContactMethod: "email",
+          interests: ["hospitality"],
+          emergencyContactName: "Grace Hopper",
+          emergencyContactPhone: "555-0101",
+          directoryVisible: true,
+          contactAllowed: true,
+          // emergencyContactConsentVerified is omitted/false
+        })
+      ).rejects.toThrow("Consent verification is required to save emergency contact details.");
+    });
   });
 });

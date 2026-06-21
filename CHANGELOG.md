@@ -6,6 +6,14 @@ The format is based on Keep a Changelog and this project follows Semantic Versio
 
 ## [Unreleased]
 
+- Added Database & Application Hardening (Council Review 2 / ADR 0011):
+  - Created a database-level immutability trigger preventing modification or deletion of `consent_logs` entries.
+  - Implemented an emergency contact consent verification checkbox on the profile edit modal (`member-profile-edit.tsx`) and church admin edit modal (`church-admin-person-edit.tsx`), enforcing validation rules at both client forms and server actions.
+  - Added read-access auditing for pastoral care records (`logAuditEvent` called with `"READ_PASTORAL"` on list query), with comprehensive parallel log writes.
+  - Built a React 19 render-pure client session timeout wrapper (`session-timeout-wrapper.tsx`) that automatically logs out inactive users after 15 minutes of idle time.
+- Conducted Council Review 3 & Software Factory Protocol Alignment:
+  - Spawned 4-agent code audit covering migrations, routes, UX shell, and MVP features.
+  - Drafted ADR 0012 proposing a database-level audit log retention policy and automated pruning schedule (365 days retention).
 - Added ChurchCore LMS — Project HQ: Built a secure project governance dashboard at `/hq` and database migrations for tracking governance concerns (`hq_sessions`, `hq_tasks`, `hq_risks`, `hq_decisions`). Implemented a secure Postgres `public.current_user_role()` function to enable Row Level Security (RLS) policies on all tables, granting full access to admins, read-write to managers, read-only to teachers, and blocking normal members. Added a server-side AI proxy at `/api/ai` to communicate with Anthropic Claude using the secure `ANTHROPIC_API_KEY`, automatically scrubbing email addresses and UUIDs/IDs from prompts before forwarding. Registered the dashboard in the application shell with unified visual feedback, status badges, creation/edition modals, and quick advisor prompts.
 - Hardened Project HQ Security & UX (Sprint 1 Council Review Synthesis):
   - Fixed `public.current_user_role()` SQL helper function to correctly verify `lead_teacher` assignments by querying `ccm_volunteer_assignments.profile_id` against the current user's resolved profile `id` instead of `auth.uid()`, resolving teacher RLS mapping test errors.

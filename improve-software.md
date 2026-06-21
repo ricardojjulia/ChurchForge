@@ -1,40 +1,39 @@
-# IMPROVE-SOFTWARE — ChurchCore LMS Council Review Protocol
+# IMPROVE-SOFTWARE — ChurchCore Council Review & Software Factory Protocol
 
-This file defines the repeatable 4-agent council review process for advancing ChurchCore LMS toward MVP, security compliance, and competitive readiness. Run this council at the end of every major sprint or when deciding the next implementation priority.
-
----
-
-## When to Run the Council
-
-- After merging a significant feature branch
-- Before planning the next sprint
-- When the product backlog needs reprioritization
-- After any production incident or user feedback cycle
-- At minimum: once every two weeks of active development
+This protocol defines the repeatable cycle of **auditing code (via the 4-agent Council)**, **planning changes (via ADRs and Change Management)**, and **executing features/fixes (via the Software Factory)** to keep the ChurchCore platform aligned with enterprise-grade MVP, security, and performance standards.
 
 ---
 
-## Council Structure
+## 1. The Improvement Command Cycle
 
-The council always runs 4 agents in parallel, each with a distinct audit lens. They do not edit code. They read and report. A fifth synthesis step (human or AI) combines findings into ADRs and implementation prompts.
+Whenever you need to verify, plan, or improve the ChurchCore software (at the end of a sprint, after major changes, or before a new release), trigger the `/improve-software` workflow:
 
-| Agent | Role | Focus |
-|-------|------|-------|
-| **Agent 1** | Database & API Audit | Migrations, lib utilities, API routes, seed data, security gaps |
-| **Agent 2** | Route & Page Audit | App navigation links, 404s, stub pages, API coverage |
-| **Agent 3** | UX & Shell Audit | ARIA, loading states, error handling, mobile responsiveness, CSS |
-| **Agent 4** | Feature & Competitive Audit | Feature completion, user-role boundary coverage, competitive gaps, MVP score |
+```mermaid
+graph TD
+    A[Trigger /improve-software] --> B[Run 4-Agent Council Audit]
+    B --> C[Synthesize Consensus & Findings]
+    C --> D[Generate ADRs & Change Management Plan]
+    D --> E[Create AI Prompts for Software Factory]
+    E --> F[Execute via Gemini Software Factory Skills]
+    F --> G[Run Verification & Sanity Checks]
+```
+
+1. **Audit (Council):** Spawn 4 read-only agents in parallel using the prompts defined below to inspect database state, page routing, UX quality, and feature completeness.
+2. **Synthesize:** Group findings into consensus items, list architectural decisions, and outline the sequence of work.
+3. **ADRs:** Generate Architectural Decision Records (ADRs) for any new boundaries, role access helpers, integration contracts, or data exposure rules under `docs/adr/`.
+4. **Change Management:** Map out the prompts into sequential tasks and track them via repo-local Planning Mode artifacts (`implementation_plan.md`, `task.md`, `walkthrough.md`).
+5. **Software Factory Execution:** Hand off the concrete, self-contained AI prompts to the software factory (`gemini-feature-factory`, `gemini-build-with-tests`) to implement the changes to professional standards.
 
 ---
 
-## Agent Prompts
+## 2. Phase 1: Spawning the Council (Audit Prompts)
 
-Copy these verbatim when spawning agents. Replace `[REPO_ROOT]` with the actual path.
+Copy these prompts verbatim when spawning the council. Replace `[REPO_ROOT]` with the absolute workspace path.
 
 ### Agent 1 — Database & API Audit
 
 ```
-You are Council Agent 1 for ChurchCore LMS. Your job is a database and API state audit. READ-ONLY — do not edit any files.
+You are Council Agent 1 for ChurchCore. Your job is a database and API state audit. READ-ONLY — do not edit any files.
 
 Repo root: [REPO_ROOT]
 
@@ -42,9 +41,9 @@ Produce a structured report covering:
 
 1. Migrations — count all CREATE TABLE statements in supabase/migrations/. List each table, whether it has Row Level Security (RLS) enabled, and flag any tables that have no corresponding references in the TypeScript application files.
 
-2. Lib & Server Utilities — list major directories under lib/ (e.g. lib/communications/, lib/supabase/, lib/shepherd-ai/). For each: note key types and check if there are matching repository/service files and unit/integration tests present under tests/ or near the source. Flag gaps.
+2. Lib & Server Utilities — list major directories under lib/ (e.g., lib/communications/, lib/supabase/, lib/shepherd-ai/). For each: note key types and check if there are matching repository/service files and unit/integration tests present under tests/ or near the source. Flag gaps.
 
-3. API Routes — list every file under app/api/ (e.g. app/api/ai/route.ts, app/api/demo/feedback/route.ts). Note HTTP method from export names.
+3. API Routes — list every file under app/api/ (e.g., app/api/ai/route.ts, app/api/demo/feedback/route.ts). Note HTTP method from export names.
 
 4. App Pages — list every page.tsx under app/. Flag any that call redirect() instead of rendering content and any that are empty stubs.
 
@@ -58,7 +57,7 @@ Return concise structured markdown. Target 500–700 words.
 ### Agent 2 — Route & Page Audit
 
 ```
-You are Council Agent 2 for ChurchCore LMS. Your job is a route and page audit. READ-ONLY — do not edit any files.
+You are Council Agent 2 for ChurchCore. Your job is a route and page audit. READ-ONLY — do not edit any files.
 
 Repo root: [REPO_ROOT]
 
@@ -78,7 +77,7 @@ Return concise structured markdown. Be specific — name every 404 and stub. Tar
 ### Agent 3 — UX & Shell Audit
 
 ```
-You are Council Agent 3 for ChurchCore LMS. Your job is a UX and shell quality audit. READ-ONLY — do not edit any files.
+You are Council Agent 3 for ChurchCore. Your job is a UX and shell quality audit. READ-ONLY — do not edit any files.
 
 Repo root: [REPO_ROOT]
 
@@ -100,7 +99,7 @@ Return concise structured markdown. Be specific. Target 400–600 words.
 ### Agent 4 — Feature & Competitive Audit
 
 ```
-You are Council Agent 4 for ChurchCore LMS. Your job is feature completeness and competitive gap analysis. READ-ONLY — do not edit any files.
+You are Council Agent 4 for ChurchCore. Your job is feature completeness and competitive gap analysis. READ-ONLY — do not edit any files.
 
 Repo root: [REPO_ROOT]
 
@@ -126,26 +125,23 @@ Return concise structured markdown. Be honest and direct. Target 500–700 words
 
 ---
 
-## Synthesis Step (After All 4 Agents Report)
+## 3. Phase 2: Synthesis & Change Management
 
 After receiving all 4 agent reports, the synthesis step must produce:
 
 ### 1. Cross-Agent Consensus
-
 List findings that multiple agents independently flagged. These are highest priority.
 
 ### 2. ADR Drafts
-
 For every architectural decision the council identifies (new boundary, new pattern, new constraint), draft an ADR following the format in `docs/adr/`. Assign the next sequential number.
 
-ADR triggers:
+*ADR triggers:*
 - A new module pattern or boundary (e.g., how error.tsx is structured)
 - A new role-based access pattern
 - A new integration contract
 - A new data exposure rule
 
 ### 3. Implementation Prompts
-
 For every agreed-upon change, write a concrete implementation prompt using this template:
 
 ```
@@ -168,8 +164,26 @@ For every agreed-upon change, write a concrete implementation prompt using this 
 ```
 
 ### 4. Execution Order
-
 List prompts in dependency order. Note which are independent (can run in parallel) and which must be sequential.
+
+---
+
+## 4. Phase 3: Software Factory Processing (Good Standards)
+
+Every prompt generated by the council review must be executed through the repo-local software factory, adhering to Gemini specific skills (`gemini-feature-factory`, `gemini-build-with-tests`, and `gemini-pr-review` under `.gemini/skills/`).
+
+### Code Quality & Implementation Standards
+- **Zero Impurity/Render Violations:** Never call impure functions (e.g., `Date.now()`, `Math.random()`, or async operations) inside React component render loops or `useRef` initializations. Use `useEffect` or React hooks wrappers to isolate side effects.
+- **Tenant Database Isolation:** Ensure the control-plane and tenant data surfaces are strictly isolated. All tenant actions must use supabase server/admin connections resolved via church profile sessions.
+- **Row Level Security (RLS):** All database changes must enforce RLS check policies utilizing the `current_user_role()` context. Run `npm run audit:rls` to verify schema constraints.
+- **Doc Integrity:** Retain existing comments, type boundaries, and docstrings that are unrelated to your changes.
+- **No Push to main:** Never commit code directly to `main`. Create a feature branch, run testing suites, and verify via a Pull Request.
+
+### Sanity Checks Before Delivery
+Before handing work back to the user, the agent must run:
+1. `npm run test` to ensure all Vitest and Playwright test assertions pass cleanly.
+2. `npm run lint` to guarantee zero ESLint rules violations.
+3. `npm run build` to verify next-compilation builds successfully without compiler exceptions.
 
 ---
 
@@ -180,14 +194,3 @@ After each council run, commit the following:
 - `docs/reviews/YYYY-MM-DD-council-review-[N]-synthesis.md` — full synthesis with prompts
 - `docs/reviews/YYYY-MM-DD-council-review-[N]-agent-[1–4]-*.md` — individual agent reports
 - `docs/adr/XXXX-*.md` — any new ADRs drafted by the council
-
----
-
-## Council Quality Rules
-
-- Agents must not edit code.
-- Agents must cite specific file paths and line numbers where possible.
-- The synthesis must not add scope beyond what agents identified.
-- Implementation prompts must be self-contained — a coder reading only the prompt should know exactly what to build.
-- Every prompt that touches auth, tenant isolation, or student records must explicitly state what security check is expected.
-- ADRs must be committed before implementation begins.

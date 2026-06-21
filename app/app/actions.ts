@@ -28,6 +28,7 @@ export type UpdateProfileInput = {
   emergencyContactPhone: string | null;
   directoryVisible: boolean;
   contactAllowed: boolean;
+  emergencyContactConsentVerified?: boolean;
 };
 
 export type UpdateFamilyInput = {
@@ -80,6 +81,7 @@ export type UpdateChurchAdminPersonInput = {
   emergencyContactPhone: string | null;
   directoryVisible: boolean;
   contactAllowed: boolean;
+  emergencyContactConsentVerified?: boolean;
 };
 
 export type UpdateChurchAdminPeopleBulkInput = {
@@ -158,6 +160,12 @@ function validateInput(input: UpdateProfileInput): string | null {
   if (input.interests.some((interest) => interest.trim().length > 120)) {
     return "Each interest must be 120 characters or fewer.";
   }
+  if (
+    (input.emergencyContactName?.trim() || input.emergencyContactPhone?.trim()) &&
+    !input.emergencyContactConsentVerified
+  ) {
+    return "Consent verification is required to save emergency contact details.";
+  }
   return null;
 }
 
@@ -218,6 +226,12 @@ function validateChurchAdminPersonInput(
     )
   ) {
     return "Invalid membership status.";
+  }
+  if (
+    (input.emergencyContactName?.trim() || input.emergencyContactPhone?.trim()) &&
+    !input.emergencyContactConsentVerified
+  ) {
+    return "Consent verification is required to save emergency contact details.";
   }
   return null;
 }
@@ -861,6 +875,7 @@ function parseProfileChangePayload(payload: unknown): UpdateProfileInput {
         : null,
     directoryVisible: Boolean(candidate.directoryVisible),
     contactAllowed: Boolean(candidate.contactAllowed),
+    emergencyContactConsentVerified: Boolean(candidate.emergencyContactConsentVerified),
   };
 
   const error = validateInput(normalized);
@@ -957,6 +972,7 @@ export async function updateMemberProfileAction(
       emergencyContactPhone,
       directoryVisible: input.directoryVisible,
       contactAllowed: input.contactAllowed,
+      emergencyContactConsentVerified: input.emergencyContactConsentVerified,
     },
   });
 

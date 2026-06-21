@@ -44,6 +44,7 @@ import { LanguageSelect } from "@/components/language-select";
 import { useI18n } from "@/components/i18n-provider";
 import { signOutAction } from "@/app/sign-in/actions";
 import type { AuthSession } from "@/lib/auth";
+import { SessionTimeoutWrapper } from "@/components/application/session-timeout-wrapper";
 
 type ShellNavItem = {
   href: string;
@@ -341,7 +342,9 @@ export function ApplicationShell({
 
       {/* ── Main ── */}
       <AppShellMain>
-        <Stack gap="lg">{children}</Stack>
+        <SessionTimeoutWrapper>
+          <Stack gap="lg">{children}</Stack>
+        </SessionTimeoutWrapper>
       </AppShellMain>
 
       {/* ── Mobile bottom nav ── */}

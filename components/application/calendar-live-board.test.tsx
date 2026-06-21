@@ -1,6 +1,6 @@
 import { render, screen } from "@testing-library/react";
 import { MantineProvider } from "@mantine/core";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { CalendarLiveBoard } from "@/components/application/calendar-live-board";
 import { getCategoryColor } from "@/lib/calendar-utils";
@@ -107,9 +107,16 @@ function renderBoard(
 // Tests
 // ---------------------------------------------------------------------------
 
+
 describe("CalendarLiveBoard", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date("2026-06-07T12:00:00Z"));
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
   });
 
   // -------------------------------------------------------------------------
