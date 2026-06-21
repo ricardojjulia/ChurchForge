@@ -9,10 +9,13 @@ import {
 import type { ImportSourceSystem } from "@/lib/people-import-source-adapters";
 import { hasTenantBackendEnv } from "@/lib/supabase/tenant";
 
+import { CustomImportMapping } from "@/lib/people-import-dry-run";
+
 export async function runPeopleImportDryRunAction(input: {
   sourceFilename: string;
   sourceSystem?: ImportSourceSystem;
   csvText: string;
+  customMapping?: CustomImportMapping;
 }) {
   const session = await requireChurchSession("/app/church-admin/people/import");
 
@@ -41,6 +44,7 @@ export async function runPeopleImportDryRunAction(input: {
     sourceFilename: input.sourceFilename,
     sourceSystem: input.sourceSystem,
     csvText: input.csvText,
+    customMapping: input.customMapping,
   });
 }
 

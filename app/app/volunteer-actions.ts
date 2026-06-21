@@ -5,6 +5,7 @@ import { revalidatePath } from "next/cache";
 
 import { requireChurchSession } from "@/lib/auth";
 import { logAuditEvent } from "@/lib/actions/audit";
+import { checkVolunteerBurnout } from "@/lib/burnout-calculator";
 import {
   createTenantServerClient,
   createTenantAdminClient,
@@ -495,9 +496,19 @@ export async function assignVolunteerAction(input: {
   roleName: string;
   startsAt: string;
   endsAt: string;
+  bypassBurnout?: boolean;
 }): Promise<{ ok: boolean; error?: string }> {
   const session = await requireAdminSession();
   const churchId = session.appContext.church.id;
+
+  // Burnout check
+  if (!input.bypassBurnout) {
+    const burnoutResult = await checkVolunteerBurnout(churchId, input.profileId, input.startsAt);
+    if (burnoutResult.isBurnedOut) {
+      return { ok: false, error: `BURNOUT_WARNING: ${burnoutResult.reason}` };
+    }
+  }
+
   let linkedEventId: string | null = null;
 
   // Conflict check: is this volunteer already assigned on the same day?
@@ -538,6 +549,23 @@ export async function assignVolunteerAction(input: {
         input.endsAt,
       ],
     );
+
+    if (input.bypassBurnout) {
+      try {
+        await logAuditEvent({
+          tableName: "volunteer_shifts",
+          recordId: input.profileId,
+          operation: "UPDATE",
+          actorId: session.profile.id,
+          churchId,
+          actorRole: session.appContext.roleId,
+          newValues: { burnout_bypass: true, roleName: input.roleName },
+        });
+      } catch (auditError) {
+        console.error("Failed to log burnout bypass audit event (local fallback):", auditError);
+      }
+    }
+
     revalidatePath(`${SCHEDULES_PATH}/${input.planId}`);
     return { ok: true };
   }
@@ -566,6 +594,23 @@ export async function assignVolunteerAction(input: {
     status: "assigned", confirmation_status: "pending",
   });
   if (error) return { ok: false, error: error.message };
+
+  if (input.bypassBurnout) {
+    try {
+      await logAuditEvent({
+        tableName: "volunteer_shifts",
+        recordId: input.profileId,
+        operation: "UPDATE",
+        actorId: session.profile.id,
+        churchId,
+        actorRole: session.appContext.roleId,
+        newValues: { burnout_bypass: true, roleName: input.roleName },
+      });
+    } catch (auditError) {
+      console.error("Failed to log burnout bypass audit event:", auditError);
+    }
+  }
+
   revalidatePath(`${SCHEDULES_PATH}/${input.planId}`);
   return { ok: true };
 }

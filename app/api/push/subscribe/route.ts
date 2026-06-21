@@ -21,7 +21,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     return NextResponse.json({ received: true, skipped: true });
   }
 
-  const ip = (req as any).ip || req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "127.0.0.1";
+  const ip = (req as { ip?: string }).ip || req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "127.0.0.1";
   if (isRateLimited(`push-subscribe:${ip}`, 15, 60000)) {
     return NextResponse.json({ error: "Too Many Requests" }, { status: 429 });
   }

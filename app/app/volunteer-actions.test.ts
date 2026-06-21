@@ -184,8 +184,9 @@ describe("volunteer actions", () => {
 
   it("returns conflict when volunteer already assigned on same date", async () => {
     queryTenantLocalDbMock
-      .mockResolvedValueOnce({ rows: [{ event_id: "event-1" }] })
-      .mockResolvedValueOnce({ rows: [{ id: "existing-shift" }] });
+      .mockResolvedValueOnce({ rows: [{ count: 0 }] }) // Burnout query
+      .mockResolvedValueOnce({ rows: [{ event_id: "event-1" }] }) // Event query
+      .mockResolvedValueOnce({ rows: [{ id: "existing-shift" }] }); // Conflict query
 
     const result = await assignVolunteerAction({
       planId: "plan-1",
@@ -204,9 +205,10 @@ describe("volunteer actions", () => {
 
   it("writes linked event id when assigning a volunteer", async () => {
     queryTenantLocalDbMock
-      .mockResolvedValueOnce({ rows: [{ event_id: "event-9" }] })
-      .mockResolvedValueOnce({ rows: [] })
-      .mockResolvedValueOnce({ rows: [] });
+      .mockResolvedValueOnce({ rows: [{ count: 0 }] }) // Burnout query
+      .mockResolvedValueOnce({ rows: [{ event_id: "event-9" }] }) // Event query
+      .mockResolvedValueOnce({ rows: [] }) // Conflict query
+      .mockResolvedValueOnce({ rows: [] }); // Insert query
 
     const result = await assignVolunteerAction({
       planId: "plan-1",

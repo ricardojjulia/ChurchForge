@@ -4,7 +4,7 @@ import { verifyUnsubscribeToken } from "@/lib/communications/unsubscribe";
 import { isRateLimited } from "@/lib/rate-limit";
 
 export async function GET(request: NextRequest): Promise<Response> {
-  const ip = (request as any).ip || request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "127.0.0.1";
+  const ip = (request as { ip?: string }).ip || request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "127.0.0.1";
   if (isRateLimited(`unsubscribe:${ip}`, 15, 60000)) {
     return new Response("Too Many Requests", {
       status: 429,
