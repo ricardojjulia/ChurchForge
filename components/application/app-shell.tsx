@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { useDisclosure } from "@mantine/hooks";
 import {
   AppShell,
@@ -46,7 +47,7 @@ import { signOutAction } from "@/app/sign-in/actions";
 import type { AuthSession } from "@/lib/auth";
 import { SessionTimeoutWrapper } from "@/components/application/session-timeout-wrapper";
 
-type ShellNavItem = {
+export type ShellNavItem = {
   href: string;
   label: string;
   description: string;
@@ -107,6 +108,14 @@ export function ApplicationShell({
 }) {
   const [opened, { toggle, close }] = useDisclosure(false);
   const { t } = useI18n();
+  const pathname = usePathname();
+
+  function isItemActive(itemHref: string) {
+    if (itemHref === "/" || itemHref === workspaceHref) {
+      return pathname === itemHref;
+    }
+    return pathname.startsWith(itemHref);
+  }
 
   return (
     <AppShell
@@ -237,7 +246,7 @@ export function ApplicationShell({
                       className="app-shell-nav-link"
                       component={Link}
                       href={item.href}
-                      active={item.active}
+                      active={item.active !== undefined ? item.active : isItemActive(item.href)}
                       label={item.label}
                       description={item.description}
                       leftSection={<Icon size={16} />}
@@ -265,6 +274,7 @@ export function ApplicationShell({
               className="app-shell-nav-link"
               component={Link}
               href={workspaceHref}
+              active={pathname === workspaceHref}
               label={t("common", "workspace")}
               description={t("common", "yourRoleHome")}
               leftSection={<ShieldCheck size={16} />}
@@ -279,6 +289,7 @@ export function ApplicationShell({
                 className="app-shell-nav-link"
                 component={Link}
                 href={calendarHref}
+                active={pathname === calendarHref}
                 label={t("common", "calendar")}
                 description={t("common", "churchEvents")}
                 leftSection={<CalendarRange size={16} />}

@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 
 import { requireChurchSession } from "@/lib/auth";
+import { logAuditEvent } from "@/lib/actions/audit";
 import {
   insertConsentLogEntries,
   type ConsentCommunicationType,
@@ -2845,6 +2846,17 @@ export async function acknowledgeBurnoutAlertAction(input: AcknowledgeBurnoutAle
       .eq("church_id", churchId);
     if (error) throw new Error(error.message);
   }
+
+  // Audit log the burnout warning bypass override
+  await logAuditEvent({
+    tableName: "burnout_alerts",
+    recordId: input.alertId,
+    operation: "UPDATE",
+    actorId: session.profile.id,
+    churchId: churchId,
+    actorRole: session.appContext.roleId,
+    newValues: { acknowledged: true },
+  });
 
   revalidatePath("/app/church-admin");
 }

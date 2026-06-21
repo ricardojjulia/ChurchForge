@@ -2,21 +2,52 @@ import { NextResponse } from "next/server";
 import { requireControlPlaneSession } from "@/lib/auth";
 import { queryTenantLocalDb } from "@/lib/supabase/tenant";
 
+interface CachePayload {
+  ok: boolean;
+  activeConnections: number;
+  states: Array<{ count: number; state: string }>;
+}
+
+let cachedData: CachePayload | null = null;
+let cacheExpiry = 0;
+
+// Exported helper to clear cache in testing environments
+export function resetDbHealthCache() {
+  cachedData = null;
+  cacheExpiry = 0;
+}
+
 export async function GET() {
   try {
     await requireControlPlaneSession("/control/db-health");
 
-    const result = await queryTenantLocalDb<{ count: number; state: string }>(
-      "SELECT count(*)::integer as count, state FROM pg_stat_activity GROUP BY state"
+    const now = Date.now();
+    if (cachedData && now < cacheExpiry) {
+      return NextResponse.json(cachedData);
+    }
+
+    const queryPromise = queryTenantLocalDb<{ count: number; state: string }>(
+      "SELECT count(*)::integer as count, state FROM pg_stat_activity GROUP BY state",
     );
+
+    const timeoutPromise = new Promise<never>((_, reject) => {
+      setTimeout(() => reject(new Error("Connection timeout")), 2000);
+    });
+
+    const result = await Promise.race([queryPromise, timeoutPromise]);
 
     const activeConnections = result.rows.reduce((sum, row) => sum + Number(row.count), 0);
 
-    return NextResponse.json({
+    const payload = {
       ok: true,
       activeConnections,
       states: result.rows,
-    });
+    };
+
+    cachedData = payload;
+    cacheExpiry = now + 10000; // 10 seconds cache TTL
+
+    return NextResponse.json(payload);
   } catch (error: unknown) {
     if (
       error &&
@@ -31,7 +62,7 @@ export async function GET() {
     console.error("[db-health] Failed to retrieve database health:", errorMessage);
     return NextResponse.json(
       { error: "Failed to retrieve database health" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

@@ -1,5 +1,5 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
-import { GET } from "./route";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { GET, resetDbHealthCache } from "./route";
 
 const { requireControlPlaneSessionMock, queryTenantLocalDbMock } = vi.hoisted(() => ({
   requireControlPlaneSessionMock: vi.fn(),
@@ -17,6 +17,12 @@ vi.mock("@/lib/supabase/tenant", () => ({
 describe("GET /api/control/db-health", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    resetDbHealthCache();
+    vi.useFakeTimers();
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
   });
 
   it("checks for control plane session and returns DB statistics", async () => {
@@ -34,7 +40,7 @@ describe("GET /api/control/db-health", () => {
     expect(response.status).toBe(200);
     expect(requireControlPlaneSessionMock).toHaveBeenCalledWith("/control/db-health");
     expect(queryTenantLocalDbMock).toHaveBeenCalledWith(
-      expect.stringContaining("SELECT count(*)::integer as count, state FROM pg_stat_activity")
+      expect.stringContaining("SELECT count(*)::integer as count, state FROM pg_stat_activity"),
     );
     expect(body).toEqual({
       ok: true,
@@ -45,6 +51,56 @@ describe("GET /api/control/db-health", () => {
       ],
     });
   });
+
+  it("serves stats from cache during cache TTL window and queries again when expired", async () => {
+    requireControlPlaneSessionMock.mockResolvedValue({ canAccessControl: true });
+    queryTenantLocalDbMock.mockResolvedValue({
+      rows: [{ count: 3, state: "active" }],
+    });
+
+    const response1 = await GET();
+    const body1 = await response1.json();
+    expect(body1.activeConnections).toBe(3);
+    expect(queryTenantLocalDbMock).toHaveBeenCalledTimes(1);
+
+    // Call again immediately — should return cache
+    const response2 = await GET();
+    const body2 = await response2.json();
+    expect(body2.activeConnections).toBe(3);
+    expect(queryTenantLocalDbMock).toHaveBeenCalledTimes(1);
+
+    // Advance timer past TTL of 10s
+    vi.advanceTimersByTime(11000);
+
+    queryTenantLocalDbMock.mockResolvedValue({
+      rows: [{ count: 7, state: "active" }],
+    });
+
+    const response3 = await GET();
+    const body3 = await response3.json();
+    expect(body3.activeConnections).toBe(7);
+    expect(queryTenantLocalDbMock).toHaveBeenCalledTimes(2);
+  });
+
+  it("times out and returns 500 when database query exceeds 2 seconds", async () => {
+    requireControlPlaneSessionMock.mockResolvedValue({ canAccessControl: true });
+    // Infinite query promise mock
+    queryTenantLocalDbMock.mockImplementation(() => new Promise(() => {}));
+
+    const responsePromise = GET();
+
+    // Fast forward to trigger timeout race rejection, flushing microtasks
+    await vi.advanceTimersByTimeAsync(2500);
+
+    const response = await responsePromise;
+    const body = await response.json();
+
+    expect(response.status).toBe(500);
+    expect(body).toEqual({
+      error: "Failed to retrieve database health",
+    });
+  });
+
   it("propagates NEXT_REDIRECT errors thrown by requireControlPlaneSession", async () => {
     const redirectError = Object.assign(new Error("NEXT_REDIRECT"), {
       digest: "NEXT_REDIRECT;...",
