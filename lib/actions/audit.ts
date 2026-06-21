@@ -35,3 +35,16 @@ export async function logAuditEvent(input: LogAuditEventInput): Promise<void> {
 
   if (error) throw new Error(`logAuditEvent failed: ${error.message}`);
 }
+
+export async function pruneAuditLogsAction(retentionDays: number = 365): Promise<void> {
+  const supabase = createTenantAdminClient();
+
+  const { error } = await supabase.rpc("prune_audit_logs", {
+    retention_days: retentionDays,
+  });
+
+  if (error) {
+    throw new Error(`pruneAuditLogsAction failed: ${error.message}`);
+  }
+}
+
