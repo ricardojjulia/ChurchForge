@@ -6,6 +6,11 @@ The format is based on Keep a Changelog and this project follows Semantic Versio
 
 ## [Unreleased]
 
+- Added CSV Import Hardening & Database Health Endpoint (Council Review 4):
+  - Enforced strict 5MB size limit and 100 records limit per CSV import batch across all five dry-run import actions (`people`, `giving`, `events`, `groups`, `attendance`), preventing database connection and memory exhaustion.
+  - Implemented unit test coverage to assert file size and batch row limits rejection rules.
+  - Created a secure platform-admin database health check API `/api/control/db-health` restricted to super-admins via `requireControlPlaneSession`, querying active database connections and states (`active`, `idle`, etc.) from `pg_stat_activity` using `queryTenantLocalDb`.
+  - Added full test coverage for the health check API checking role authorization redirects, database query execution, and error propagation.
 - Added Database & Application Hardening (Council Review 2 / ADR 0011):
   - Created a database-level immutability trigger preventing modification or deletion of `consent_logs` entries.
   - Implemented an emergency contact consent verification checkbox on the profile edit modal (`member-profile-edit.tsx`) and church admin edit modal (`church-admin-person-edit.tsx`), enforcing validation rules at both client forms and server actions.
