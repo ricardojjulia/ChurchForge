@@ -76,7 +76,7 @@
     "eslint-config-next": "16.2.6",
     "jsdom": "^26.1.0",
     "server-only": "^0.0.1",
-    "supabase": "^2.89.1",
+    "supabase": "^2.109.1",
     "tailwindcss": "^4",
     "typescript": "^5",
     "vite-tsconfig-paths": "^5.1.4",
